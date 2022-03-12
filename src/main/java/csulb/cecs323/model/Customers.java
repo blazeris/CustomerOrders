@@ -43,7 +43,9 @@ public class Customers {
     /** Their phone number, with no particular validation */
     private String phone;
 
-    public Customers() {}
+    public Customers() {
+
+    } // finishes customer constructor
     public Customers (String last_name, String first_name, String street,
                       String zip, String phone) {
         this.last_name = last_name;

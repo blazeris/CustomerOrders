@@ -78,6 +78,7 @@ public class CustomerOrders {
       // Any changes to the database need to be done within a transaction.
       // See: https://en.wikibooks.org/wiki/Java_Persistence/Transactions
 
+      /** example for transaction
       LOGGER.fine("Begin of Transaction");
       EntityTransaction tx = manager.getTransaction();
 
@@ -93,6 +94,7 @@ public class CustomerOrders {
       // Commit the changes so that the new data persists and is visible to other users.
       tx.commit();
       LOGGER.fine("End of Transaction");
+      **/
 
    } // End of the main method
 
