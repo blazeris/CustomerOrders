@@ -74,6 +74,7 @@ public class CustomerOrders {
       // Create an instance of CustomerOrders and store our new EntityManager as an instance variable.
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
+      System.out.println(customerOrders.getCustomersList());
 
       // Any changes to the database need to be done within a transaction.
       // See: https://en.wikibooks.org/wiki/Java_Persistence/Transactions
@@ -138,5 +139,39 @@ public class CustomerOrders {
          // Return the style object that they asked for.
          return products.get(0);
       }
-   }// End of the getStyle method
+   }// End of the getProduct method
+
+   /**
+    * Think of this as a simple map from a String to an instance of Customers that has the
+    * same name, as the string that you pass in.  To create a new Cars instance, you need to pass
+    * in an instance of Products to satisfy the foreign key constraint, not just a string
+    * representing the name of the style.
+    * @param customer_ID        The name of the product that you are looking for.
+    * @return           The Customers instance corresponding to that customer_ID.
+    */
+   public Customers getCustomer (String customer_ID) {
+      // Run the native query that we defined in the Products entity to find the right style.
+      List<Customers> customers = this.entityManager.createNamedQuery("ReturnProduct",
+              Customers.class).setParameter(1, customer_ID).getResultList();
+      if (customers.size() == 0) {
+         // Invalid style name passed in.
+         return null;
+      } else {
+         // Return the style object that they asked for.
+         return customers.get(0);
+      }
+   }// End of the getCustomer method
+
+   public List<Customers> getCustomersList() {
+      // Run the native query that we defined in the Products entity to find the right style.
+      List<Customers> customers = this.entityManager.createNamedQuery("ReturnProduct",
+              Customers.class).getResultList();
+      if (customers.size() == 0) {
+         // Invalid style name passed in.
+         return null;
+      } else {
+         // Return the style object that they asked for.
+         return customers;
+      }
+   }// End of the getCustomer method
 } // End of CustomerOrders class
