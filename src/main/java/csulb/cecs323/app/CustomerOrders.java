@@ -74,7 +74,10 @@ public class CustomerOrders {
       // Create an instance of CustomerOrders and store our new EntityManager as an instance variable.
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
-      System.out.println(customerOrders.getCustomersList());
+      for(Customers customer: customerOrders.getCustomersList()){
+         System.out.println(customer);
+      }
+
 
       // Any changes to the database need to be done within a transaction.
       // See: https://en.wikibooks.org/wiki/Java_Persistence/Transactions
@@ -151,7 +154,7 @@ public class CustomerOrders {
     */
    public Customers getCustomer (String customer_ID) {
       // Run the native query that we defined in the Products entity to find the right style.
-      List<Customers> customers = this.entityManager.createNamedQuery("ReturnProduct",
+      List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",
               Customers.class).setParameter(1, customer_ID).getResultList();
       if (customers.size() == 0) {
          // Invalid style name passed in.
@@ -164,7 +167,7 @@ public class CustomerOrders {
 
    public List<Customers> getCustomersList() {
       // Run the native query that we defined in the Products entity to find the right style.
-      List<Customers> customers = this.entityManager.createNamedQuery("ReturnProduct",
+      List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",
               Customers.class).getResultList();
       if (customers.size() == 0) {
          // Invalid style name passed in.
