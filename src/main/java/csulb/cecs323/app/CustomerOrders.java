@@ -21,6 +21,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 /**
@@ -74,8 +75,17 @@ public class CustomerOrders {
       // Create an instance of CustomerOrders and store our new EntityManager as an instance variable.
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
+      Scanner in = new Scanner(System.in);
+      System.out.println("Select ");
+
+      System.out.println(customerOrders.getCustomer("1"));
+
       for(Customers customer: customerOrders.getCustomersList()){
          System.out.println(customer);
+      }
+
+      for(Products product: customerOrders.getProductsList()){
+         System.out.println(product);
       }
 
 
@@ -144,6 +154,19 @@ public class CustomerOrders {
       }
    }// End of the getProduct method
 
+   public List<Products> getProductsList () {
+      // Run the native query that we defined in the Products entity to find the right style.
+      List<Products> products = this.entityManager.createNamedQuery("ReturnProduct",
+              Products.class).setParameter(1, "*").getResultList();
+      if (products.size() == 0) {
+         // Invalid style name passed in.
+         return null;
+      } else {
+         // Return the style object that they asked for.
+         return products;
+      }
+   }// End of the getProduct method
+
    /**
     * Think of this as a simple map from a String to an instance of Customers that has the
     * same name, as the string that you pass in.  To create a new Cars instance, you need to pass
@@ -168,7 +191,7 @@ public class CustomerOrders {
    public List<Customers> getCustomersList() {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",
-              Customers.class).getResultList();
+              Customers.class).setParameter(1, "*").getResultList();
       if (customers.size() == 0) {
          // Invalid style name passed in.
          return null;
