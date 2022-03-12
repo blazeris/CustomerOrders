@@ -123,7 +123,7 @@ public class Customers {
 
     @Override
     public String toString () {
-        return "Customer- ID: " + this.customer_id + ", Name: " + this.last_name +
+        return "Customer-ID: " + this.customer_id + "\tName: " + this.last_name +
                 ", " + this.first_name;
     }
     @Override

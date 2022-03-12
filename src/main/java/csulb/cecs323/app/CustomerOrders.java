@@ -76,17 +76,49 @@ public class CustomerOrders {
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
       Scanner in = new Scanner(System.in);
-      System.out.println("Select ");
-
-      System.out.println(customerOrders.getCustomer("1"));
-
-      for(Customers customer: customerOrders.getCustomersList()){
-         System.out.println(customer);
+      boolean foundID = false;
+      Customers targetCustomer = null;
+      while(!foundID){
+         System.out.println("Which customer are you? Select your customer ID from the following customers:");
+         for(Customers customer: customerOrders.getCustomersList()){
+            System.out.println("\t" + customer);
+         }
+         System.out.print("Type your customer id here: ");
+         String id = in.nextLine();
+         for(Customers customer: customerOrders.getCustomersList()){
+            if(customer.getCustomer_id() == Long.parseLong(id)){
+               targetCustomer = customer;
+               foundID = true;
+            }
+         }
+         if(!foundID){
+            System.out.println("Invalid customer ID! Try again.");
+         }
       }
+      System.out.println(targetCustomer);
 
-      for(Products product: customerOrders.getProductsList()){
-         System.out.println(product);
+
+
+      boolean foundUPC = false;
+      Products targetProduct = null;
+      while(!foundUPC){
+         System.out.println("\nWhich product would you like? Select the desired from the following products:");
+         for(Products product: customerOrders.getProductsList()){
+            System.out.println("\t" + product);
+         }
+         System.out.print("Type your product UPC here: ");
+         String upc = in.nextLine();
+         for(Products product: customerOrders.getProductsList()){
+            if(product.getUPC().equals(upc)){
+               targetProduct = product;
+               foundUPC = true;
+            }
+         }
+         if(!foundUPC){
+            System.out.println("Invalid product UPC! Try again.");
+         }
       }
+      System.out.println(targetProduct);
 
 
       // Any changes to the database need to be done within a transaction.
