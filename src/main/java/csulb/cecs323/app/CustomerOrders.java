@@ -86,7 +86,9 @@ public class CustomerOrders {
       //customerOrders.promptProduct();
 
       // PROCEDURE PART 3
-       List<Orders> orders = customerOrders.promptOrders();
+       while(true){
+           List<Orders> orders = customerOrders.promptOrders();
+       }
 
 
 
@@ -153,7 +155,7 @@ public class CustomerOrders {
 
 
        return targetOrders;
-    }
+    } //end of promptOrders
 
     /**
      * Prompts the user to select a customer from a list of customers stored in the database
@@ -165,30 +167,38 @@ public class CustomerOrders {
         Customers targetCustomer = null;
         while(!foundID){
             System.out.println("Which customer are you? Select your customer ID from the following customers:");
-            for(Customers customer: getCustomersList()){
-                System.out.println("\t" + customer);
-            }
-            System.out.print("Type your customer id here (leave blank to skip): ");
-            String id = in.nextLine();
-            if(id.equals("")){
-                foundID = true;
-
-            }
-            else{
-                for(Customers customer: getCustomersList()){
-                    if(customer.getCustomer_id() == Long.parseLong(id)){
-                        targetCustomer = customer;
-                        foundID = true;
+            List<Customers> customers = getCustomers();
+            if(customers != null){
+                for(Customers customer: getCustomers()){
+                    System.out.println("\t" + customer);
+                }
+                System.out.print("Type your customer id here (leave blank to skip): ");
+                String id = in.nextLine();
+                if(id.equals("")){
+                    foundID = true;
+                }
+                else{
+                    for(Customers customer: getCustomers()){
+                        if(customer.getCustomer_id() == Long.parseLong(id)){
+                            targetCustomer = customer;
+                            foundID = true;
+                        }
                     }
                 }
+                if(!foundID){
+                    System.out.println("Invalid customer ID! Try again.");
+                }
             }
-            if(!foundID){
-                System.out.println("Invalid customer ID! Try again.");
+            else {
+                System.out.println("No previously existing customers, please indicate as new customer");
+                foundID = true;
             }
         }
-        System.out.println("You have selected: " + targetCustomer);
+        if(targetCustomer != null){
+            System.out.println("You have selected: " + targetCustomer);
+        }
         return targetCustomer;
-    }
+    } // end of promptCustomer
 
     /**
      * Prompts the user to select a product from a list of products stored in the database
@@ -200,12 +210,12 @@ public class CustomerOrders {
         Products targetProduct = null;
         while(!foundUPC){
             System.out.println("\nWhich product would you like? Select the desired from the following products:");
-            for(Products product: getProductsList()){
+            for(Products product: getProducts()){
                 System.out.println("\t" + product);
             }
             System.out.print("Type your product UPC here: ");
             String upc = in.nextLine();
-            for(Products product: getProductsList()){
+            for(Products product: getProducts()){
                 if(product.getUPC().equals(upc)){
                     targetProduct = product;
                     foundUPC = true;
@@ -217,7 +227,44 @@ public class CustomerOrders {
         }
         System.out.println("You have selected: " + targetProduct);
         return targetProduct;
-    }
+    } // end of promptProduct
+
+    /**
+     * Prompts the user to enter the information for a new customer, which will also add the
+     * information to persist in the database
+     * @return The created custoemr object
+     */
+    public Customers promptNewCustomer(){
+        Customers targetCustomer = null;
+
+        Scanner input = new Scanner(System.in);
+        System.out.println("Hello customer, can you please enter your first name:");
+        String firstName = input.nextLine();
+        System.out.println("Please enter your last name:");
+        String lastName = input.nextLine();
+        System.out.println("Please enter your phone number:");
+        String phone = input.nextLine();
+        System.out.println("Please enter your street:" );
+        String street = input.nextLine();
+        System.out.println("and last, your zip code:");
+        String zip = input.nextLine();
+
+        targetCustomer = new Customers(lastName, firstName, street, zip, phone);
+
+        try{
+            EntityTransaction tx = this.entityManager.getTransaction();
+            tx.begin();
+            this.entityManager.persist(targetCustomer);
+            tx.commit();
+        }
+        catch(DatabaseException e){
+            System.out.println(e);
+            System.out.println("You're not a new customer!");
+            targetCustomer = null;
+        }
+        System.out.println("You are: " + targetCustomer);
+        return targetCustomer;
+    } //end of promptNewCustomer
 
     /**
      * Prompts the user to input either a past date time when the order was placed, or to select the current date time
@@ -259,51 +306,7 @@ public class CustomerOrders {
         }
         System.out.println("You have selected: " + targetDateTime);
         return targetDateTime;
-    }
-
-    /**
-     * Prompts the user to enter the information for a new customer, which will also add the
-     * information to persist in the database
-     * @return The created custoemr object
-     */
-    public Customers promptNewCustomer(){
-        Customers targetCustomer = null;
-
-        Scanner input = new Scanner(System.in);
-        System.out.println("Hello customer, can you please enter your first name:");
-        String firstName = input.nextLine();
-        System.out.println("Please enter your last name:");
-        String lastName = input.nextLine();
-        System.out.println("Please enter your phone number:");
-        String phone = input.nextLine();
-        System.out.println("Please enter your street:" );
-        String street = input.nextLine();
-        System.out.println("and last, your zip code:");
-        String zip = input.nextLine();
-
-        targetCustomer = new Customers(lastName, firstName, street, zip, phone);
-
-        try{
-            EntityTransaction tx = entityManager.getTransaction();
-            tx.begin();
-            // List of Products that I want to persist.  I could just as easily done this with the seed-data.sql
-            List<Customers> customers = new ArrayList<>();
-            // Load up my List with the Entities that I want to persist.  Note, this does not put them
-            // into the database.
-            customers.add(targetCustomer);
-            // Create the list of owners in the database.
-            createEntity (customers);
-            // Commit the changes so that the new data persists and is visible to other users.
-            tx.commit();
-        }
-        catch(DatabaseException e){
-            System.out.println(e);
-            System.out.println("You're not a new customer!");
-            targetCustomer = null;
-        }
-
-        return targetCustomer;
-    }
+    } // end of promptDateTime
 
    /**
     * Create and persist a list of objects to the database.
@@ -347,7 +350,7 @@ public class CustomerOrders {
       }
    }// End of the getProduct method
 
-   public List<Products> getProductsList () {
+   public List<Products> getProducts () {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Products> products = this.entityManager.createNamedQuery("ReturnProduct",
               Products.class).setParameter(1, "*").getResultList();
@@ -381,7 +384,7 @@ public class CustomerOrders {
       }
    }// End of the getCustomer method
 
-   public List<Customers> getCustomersList() {
+   public List<Customers> getCustomers() {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",
               Customers.class).setParameter(1, "*").getResultList();
