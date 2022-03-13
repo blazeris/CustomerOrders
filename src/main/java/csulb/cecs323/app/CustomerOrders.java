@@ -14,11 +14,15 @@ package csulb.cecs323.app;
 
 // Import all of the entity classes that we have written for this application.
 import csulb.cecs323.model.*;
+import org.eclipse.persistence.exceptions.DatabaseException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -75,50 +79,24 @@ public class CustomerOrders {
       // Create an instance of CustomerOrders and store our new EntityManager as an instance variable.
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
-      Scanner in = new Scanner(System.in);
-      boolean foundID = false;
-      Customers targetCustomer = null;
-      while(!foundID){
-         System.out.println("Which customer are you? Select your customer ID from the following customers:");
-         for(Customers customer: customerOrders.getCustomersList()){
-            System.out.println("\t" + customer);
-         }
-         System.out.print("Type your customer id here: ");
-         String id = in.nextLine();
-         for(Customers customer: customerOrders.getCustomersList()){
-            if(customer.getCustomer_id() == Long.parseLong(id)){
-               targetCustomer = customer;
-               foundID = true;
-            }
-         }
-         if(!foundID){
-            System.out.println("Invalid customer ID! Try again.");
-         }
-      }
-      System.out.println(targetCustomer);
+      // PROCEDURE PART 1
+      //customerOrders.promptCustomer();
+
+      // PROCEDURE PART 2
+      //customerOrders.promptProduct();
+
+      // PROCEDURE PART 3
+       List<Orders> orders = customerOrders.promptOrders();
 
 
 
-      boolean foundUPC = false;
-      Products targetProduct = null;
-      while(!foundUPC){
-         System.out.println("\nWhich product would you like? Select the desired from the following products:");
-         for(Products product: customerOrders.getProductsList()){
-            System.out.println("\t" + product);
-         }
-         System.out.print("Type your product UPC here: ");
-         String upc = in.nextLine();
-         for(Products product: customerOrders.getProductsList()){
-            if(product.getUPC().equals(upc)){
-               targetProduct = product;
-               foundUPC = true;
-            }
-         }
-         if(!foundUPC){
-            System.out.println("Invalid product UPC! Try again.");
-         }
-      }
-      System.out.println(targetProduct);
+       //Products targetProducts = customerOrders.promptProduct();
+
+
+
+
+
+
 
 
       // Any changes to the database need to be done within a transaction.
@@ -143,6 +121,189 @@ public class CustomerOrders {
       **/
 
    } // End of the main method
+
+
+    public List<Orders> promptOrders(){
+        Scanner in = new Scanner(System.in);
+       List<Orders> targetOrders = null;
+       Customers targetCustomer = null;
+       boolean foundCustomer = false;
+       while(!foundCustomer){
+           System.out.println("Are you a new customer? Y/N");
+           String inpNewCustomer = in.nextLine().toUpperCase();
+           if(inpNewCustomer.equals("Y")){
+               targetCustomer = promptNewCustomer();
+               if(targetCustomer != null){
+                   foundCustomer = true;
+               }
+           }
+           else if(inpNewCustomer.equals("N")){
+               targetCustomer = promptCustomer();
+               if(targetCustomer != null){
+                   foundCustomer = true;
+               }
+           }
+           else {
+               System.out.println("Input a Y or N, try again.");
+           }
+       }
+
+       LocalDateTime targetDateTime = promptDateTime();
+
+
+
+       return targetOrders;
+    }
+
+    /**
+     * Prompts the user to select a customer from a list of customers stored in the database
+     * @return The user's desired customer
+     */
+    public Customers promptCustomer(){
+        Scanner in = new Scanner(System.in);
+        boolean foundID = false;
+        Customers targetCustomer = null;
+        while(!foundID){
+            System.out.println("Which customer are you? Select your customer ID from the following customers:");
+            for(Customers customer: getCustomersList()){
+                System.out.println("\t" + customer);
+            }
+            System.out.print("Type your customer id here (leave blank to skip): ");
+            String id = in.nextLine();
+            if(id.equals("")){
+                foundID = true;
+
+            }
+            else{
+                for(Customers customer: getCustomersList()){
+                    if(customer.getCustomer_id() == Long.parseLong(id)){
+                        targetCustomer = customer;
+                        foundID = true;
+                    }
+                }
+            }
+            if(!foundID){
+                System.out.println("Invalid customer ID! Try again.");
+            }
+        }
+        System.out.println("You have selected: " + targetCustomer);
+        return targetCustomer;
+    }
+
+    /**
+     * Prompts the user to select a product from a list of products stored in the database
+     * @return The user's desired product
+     */
+    public Products promptProduct(){
+        Scanner in = new Scanner(System.in);
+        boolean foundUPC = false;
+        Products targetProduct = null;
+        while(!foundUPC){
+            System.out.println("\nWhich product would you like? Select the desired from the following products:");
+            for(Products product: getProductsList()){
+                System.out.println("\t" + product);
+            }
+            System.out.print("Type your product UPC here: ");
+            String upc = in.nextLine();
+            for(Products product: getProductsList()){
+                if(product.getUPC().equals(upc)){
+                    targetProduct = product;
+                    foundUPC = true;
+                }
+            }
+            if(!foundUPC){
+                System.out.println("Invalid product UPC! Try again.");
+            }
+        }
+        System.out.println("You have selected: " + targetProduct);
+        return targetProduct;
+    }
+
+    /**
+     * Prompts the user to input either a past date time when the order was placed, or to select the current date time
+     * @return User's desired and valid date time
+     */
+    public LocalDateTime promptDateTime(){
+        Scanner in = new Scanner(System.in);
+        boolean foundDateTime = false;
+        LocalDateTime targetDateTime = null;
+        while(!foundDateTime){
+            System.out.println("\nWhat date was the order placed (year-month-date)? Leave blank if you want to place it right now:");
+            System.out.println("Ensure single digits have a 0 in front i.e 2022-04-07");
+            String inputDate = in.nextLine();
+            LocalDateTime currentTime = LocalDateTime.now();
+            if(inputDate.equals("")){
+                foundDateTime = true;
+                targetDateTime = currentTime;
+            }
+            else {
+                System.out.println("\nWhat time was the order placed (hour:minutes)?:");
+                System.out.println("Ensure single digits have a 0 in front i.e 07:03");
+                String inputTime = in.nextLine();
+
+                // We'll ignore seconds
+                String inputDateTime = inputDate + "T" + inputTime + ":00";
+                try{
+                    targetDateTime = LocalDateTime.parse(inputDateTime);
+                    if(targetDateTime.isBefore(currentTime)){
+                        foundDateTime = true;
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println("Invalid format.");
+                }
+            }
+            if(!foundDateTime){
+                System.out.println("Invalid date time! Ensure your selected date and time is before the present. Try again.");
+            }
+        }
+        System.out.println("You have selected: " + targetDateTime);
+        return targetDateTime;
+    }
+
+    /**
+     * Prompts the user to enter the information for a new customer, which will also add the
+     * information to persist in the database
+     * @return The created custoemr object
+     */
+    public Customers promptNewCustomer(){
+        Customers targetCustomer = null;
+
+        Scanner input = new Scanner(System.in);
+        System.out.println("Hello customer, can you please enter your first name:");
+        String firstName = input.nextLine();
+        System.out.println("Please enter your last name:");
+        String lastName = input.nextLine();
+        System.out.println("Please enter your phone number:");
+        String phone = input.nextLine();
+        System.out.println("Please enter your street:" );
+        String street = input.nextLine();
+        System.out.println("and last, your zip code:");
+        String zip = input.nextLine();
+
+        targetCustomer = new Customers(lastName, firstName, street, zip, phone);
+
+        try{
+            EntityTransaction tx = entityManager.getTransaction();
+            tx.begin();
+            // List of Products that I want to persist.  I could just as easily done this with the seed-data.sql
+            List<Customers> customers = new ArrayList<>();
+            // Load up my List with the Entities that I want to persist.  Note, this does not put them
+            // into the database.
+            customers.add(targetCustomer);
+            // Create the list of owners in the database.
+            createEntity (customers);
+            // Commit the changes so that the new data persists and is visible to other users.
+            tx.commit();
+        }
+        catch(DatabaseException e){
+            System.out.println(e);
+            System.out.println("You're not a new customer!");
+            targetCustomer = null;
+        }
+
+        return targetCustomer;
+    }
 
    /**
     * Create and persist a list of objects to the database.
