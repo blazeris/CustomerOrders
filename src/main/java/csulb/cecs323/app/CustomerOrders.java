@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.criteria.Order;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -86,46 +87,15 @@ public class CustomerOrders {
       //customerOrders.promptProduct();
 
       // PROCEDURE PART 3
-       while(true){
-           List<Orders> orders = customerOrders.promptOrders();
-       }
+       customerOrders.promptOrders();
 
+       customerOrders.promptProduct();
 
-
-       //Products targetProducts = customerOrders.promptProduct();
-
-
-
-
-
-
-
-
-      // Any changes to the database need to be done within a transaction.
-      // See: https://en.wikibooks.org/wiki/Java_Persistence/Transactions
-
-      /** example for transaction
-      LOGGER.fine("Begin of Transaction");
-      EntityTransaction tx = manager.getTransaction();
-
-      tx.begin();
-      // List of Products that I want to persist.  I could just as easily done this with the seed-data.sql
-      List <Products> products = new ArrayList<Products>();
-      // Load up my List with the Entities that I want to persist.  Note, this does not put them
-      // into the database.
-      products.add(new Products("076174517163", "16 oz. hickory hammer", "Stanely Tools", "1", 9.97, 50));
-      // Create the list of owners in the database.
-      customerOrders.createEntity (products);
-
-      // Commit the changes so that the new data persists and is visible to other users.
-      tx.commit();
-      LOGGER.fine("End of Transaction");
-      **/
 
    } // End of the main method
 
 
-    public List<Orders> promptOrders(){
+    public void promptOrders(){
         Scanner in = new Scanner(System.in);
        List<Orders> targetOrders = null;
        Customers targetCustomer = null;
@@ -152,9 +122,91 @@ public class CustomerOrders {
 
        LocalDateTime targetDateTime = promptDateTime();
 
+        System.out.println("What is the name of the salesperson?");
+        String seller = in.nextLine();
+        Orders createdOrder = new Orders(targetCustomer, targetDateTime, seller);
+
+        EntityTransaction tx = entityManager.getTransaction();
+        tx.begin();
+        this.entityManager.persist(createdOrder);
+
+        boolean orderDone = false;
+        while(!orderDone){
+            Products targetProduct = promptProduct();
+            if(targetProduct == null){
+                orderDone = true;
+            }
+            else {
+                int quantityInStock = targetProduct.getUnits_in_stock();
+
+                System.out.println("Please enter the quantity desired: ");
+                int quantityDesired = in.nextInt();
+                in.nextLine();
+                if(quantityDesired > quantityInStock) {
+                    boolean optionSelected = false;
+                    while(!optionSelected){
+                        System.out.println("Quantity entered is greater than amount left in stock. Your options are:");
+                        System.out.println("1. Buy whatever remaining stock is left. \n2. Remove this product from the order." +
+                                "\n3. Cancel this order.");
+                        System.out.println("Please choose an option: ");
+                        String choice = in.nextLine();
+                        switch (choice) {
+                            case "1":
+                                //buy whatever is left;
+                                quantityDesired = quantityInStock;
+                                optionSelected = true;
+                                break;
+                            case "2":
+                                //remove this product from order;
+                                optionSelected = true;
+                                break;
+                            case "3":
+                                //cancel this order;
+                                tx.rollback();
+                                orderDone = true;
+                                optionSelected = true;
+                                break;
+                            default:
+                                System.out.println("Error. Please enter 1, 2, or 3.");
+                        }
+                    }
+                    System.out.println(quantityDesired);
+                }
+                Order_lines createdOrderLine = new Order_lines(createdOrder, targetProduct, quantityDesired, targetProduct.getUnit_list_price());
+                this.entityManager.persist(createdOrderLine);
+                String upc = createdOrderLine.getProduct().getUPC();
+                Products orderLineProduct = getProduct(upc);
+                orderLineProduct.setUnits_in_stock(orderLineProduct.getUnits_in_stock() - createdOrderLine.getQuantity());
+            }
+        }
+        List<Order_lines> orderLines = getOrderLines(createdOrder);
+        System.out.println("UPC\t\t\tName\t\tUnit Cost\t\tQuantity\t\tSubtotal");
+        double totalCost = 0;
+        if(orderLines != null){
+            for(Order_lines line: orderLines){
+                System.out.println(line);
+                totalCost += line.getQuantity() * line.getUnit_sale_price();
+            }
+        }
+        System.out.println("TOTAL\t\t\t\t\t\t\t\t\t\t$" + totalCost);
+        System.out.println("Are you satisfied with this? Y/N");
+        boolean foundSatisfaction = false;
+        while(!foundSatisfaction){
+            String satisfaction = in.nextLine();
+            switch(satisfaction.toUpperCase()){
+                case "Y":
+                    foundSatisfaction = true;
+                    tx.commit();
+                    break;
+                case "N":
+                    foundSatisfaction = true;
+                    tx.rollback();
+                    break;
+            }
+        }
 
 
-       return targetOrders;
+
     } //end of promptOrders
 
     /**
@@ -199,35 +251,6 @@ public class CustomerOrders {
         }
         return targetCustomer;
     } // end of promptCustomer
-
-    /**
-     * Prompts the user to select a product from a list of products stored in the database
-     * @return The user's desired product
-     */
-    public Products promptProduct(){
-        Scanner in = new Scanner(System.in);
-        boolean foundUPC = false;
-        Products targetProduct = null;
-        while(!foundUPC){
-            System.out.println("\nWhich product would you like? Select the desired from the following products:");
-            for(Products product: getProducts()){
-                System.out.println("\t" + product);
-            }
-            System.out.print("Type your product UPC here: ");
-            String upc = in.nextLine();
-            for(Products product: getProducts()){
-                if(product.getUPC().equals(upc)){
-                    targetProduct = product;
-                    foundUPC = true;
-                }
-            }
-            if(!foundUPC){
-                System.out.println("Invalid product UPC! Try again.");
-            }
-        }
-        System.out.println("You have selected: " + targetProduct);
-        return targetProduct;
-    } // end of promptProduct
 
     /**
      * Prompts the user to enter the information for a new customer, which will also add the
@@ -308,6 +331,42 @@ public class CustomerOrders {
         return targetDateTime;
     } // end of promptDateTime
 
+    /**
+     * Prompts the user to select a product from a list of products stored in the database
+     * @return The user's desired product
+     */
+    public Products promptProduct(){
+        Scanner in = new Scanner(System.in);
+        boolean foundUPC = false;
+        Products targetProduct = null;
+        while(!foundUPC){
+            System.out.println("\nWhich product would you like? Select the desired from the following products:");
+            for(Products product: getProducts()){
+                System.out.println("\t" + product);
+            }
+            System.out.print("Type your product UPC here: ");
+            String upc = in.nextLine();
+            if(upc.equals("")){
+                foundUPC = true;
+            }
+            else {
+                for(Products product: getProducts()){
+                    if(product.getUPC().equals(upc)){
+                        targetProduct = product;
+                        foundUPC = true;
+                    }
+                }
+            }
+            if(!foundUPC){
+                System.out.println("Invalid product UPC! Try again.");
+            }
+        }
+        if(targetProduct != null){
+            System.out.println("You have selected: " + targetProduct);
+        }
+        return targetProduct;
+    } // end of promptProduct
+
    /**
     * Create and persist a list of objects to the database.
     * @param entities   The list of entities to persist.  These can be any object that has been
@@ -352,8 +411,8 @@ public class CustomerOrders {
 
    public List<Products> getProducts () {
       // Run the native query that we defined in the Products entity to find the right style.
-      List<Products> products = this.entityManager.createNamedQuery("ReturnProduct",
-              Products.class).setParameter(1, "*").getResultList();
+      List<Products> products = this.entityManager.createNamedQuery("ReturnProducts",
+              Products.class).getResultList();
       if (products.size() == 0) {
          // Invalid style name passed in.
          return null;
@@ -361,7 +420,23 @@ public class CustomerOrders {
          // Return the style object that they asked for.
          return products;
       }
-   }// End of the getProduct method
+   } // End of the getProduct method
+
+    public List<Order_lines> getOrderLines (Orders targetOrder) {
+        // Run the native query that we defined in the Products entity to find the right style.
+        List<Order_lines> orderLines = this.entityManager
+                .createNamedQuery("ReturnOrderLine", Order_lines.class)
+                .setParameter(1, targetOrder.getCustomer().getCustomer_id())
+                .setParameter(2, targetOrder.getOrder_date())
+                .getResultList();
+        if (orderLines.size() == 0) {
+            // Invalid style name passed in.
+            return null;
+        } else {
+            // Return the style object that they asked for.
+            return orderLines;
+        }
+    } // End of the getProduct method
 
    /**
     * Think of this as a simple map from a String to an instance of Customers that has the
@@ -374,7 +449,7 @@ public class CustomerOrders {
    public Customers getCustomer (String customer_ID) {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",
-              Customers.class).setParameter(1, customer_ID).getResultList();
+              Customers.class).getResultList();
       if (customers.size() == 0) {
          // Invalid style name passed in.
          return null;
@@ -387,7 +462,7 @@ public class CustomerOrders {
    public List<Customers> getCustomers() {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",
-              Customers.class).setParameter(1, "*").getResultList();
+              Customers.class).getResultList();
       if (customers.size() == 0) {
          // Invalid style name passed in.
          return null;

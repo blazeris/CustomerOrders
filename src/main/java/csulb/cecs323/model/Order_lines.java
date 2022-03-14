@@ -29,6 +29,13 @@ association class the way that we are doing here.  It seems to
 me that would be the case.
  */
 @Entity
+@NamedNativeQuery(
+        name="ReturnOrderLine",
+        query = "SELECT * " +
+                "FROM   ORDER_LINES " +
+                "WHERE CUSTOMER_ID = ? AND ORDER_DATE = ?",
+        resultClass = Order_lines.class
+)
 @IdClass(Order_lines_pk.class)
 /** The occurrence of a single Product within a single Order */
 public class Order_lines {
@@ -122,5 +129,14 @@ public class Order_lines {
 
     public int hasCode () {
         return Objects.hash(this.getOrder(), this.getProduct());
+    }
+
+    @Override
+    public String toString(){
+        return product.getUPC() + "\t\t"
+                + product.getProd_name() + "\t\t\t$"
+                + unit_sale_price + "\t\tx"
+                + quantity + "\t\t= $"
+                + (unit_sale_price * quantity);
     }
 }

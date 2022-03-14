@@ -2,6 +2,7 @@ package csulb.cecs323.model;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
+import javax.persistence.criteria.Order;
 import java.io.Serializable;
 import java.util.Objects;
 /*
@@ -36,6 +37,15 @@ public class Order_lines_pk implements Serializable {
     @Column(nullable = false, length = 30)
     /** One product within this one order */
     private String product;
+
+    public Order_lines_pk(){
+
+    }
+
+    public Order_lines_pk(Orders_pk order, String product){
+        this.order = order;
+        this.product = product;
+    }
 
     public Orders_pk getOrder() {
         return order;

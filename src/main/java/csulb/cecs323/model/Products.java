@@ -20,6 +20,13 @@ import javax.persistence.NamedNativeQuery;
 @NamedNativeQuery(
         name="ReturnProduct",
         query = "SELECT * " +
+                "FROM   PRODUCTS " +
+                "WHERE UPC = ? " ,
+        resultClass = Products.class
+)
+@NamedNativeQuery(
+        name="ReturnProducts",
+        query = "SELECT * " +
                 "FROM   PRODUCTS ",
         resultClass = Products.class
 )
