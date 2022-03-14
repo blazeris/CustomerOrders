@@ -57,6 +57,15 @@ public class Products {
     /** The quantity of this item that we have on hand. */
     private int units_in_stock;
 
+    /**
+     *
+     * @param UPC
+     * @param prod_name
+     * @param mfgr
+     * @param model
+     * @param unit_list_price
+     * @param units_in_stock
+     */
     public Products(String UPC, String prod_name, String mfgr, String model, double unit_list_price, int units_in_stock) {
         this.UPC = UPC;
         this.prod_name = prod_name;
@@ -64,7 +73,7 @@ public class Products {
         this.model = model;
         this.unit_list_price = unit_list_price;
         this.units_in_stock = units_in_stock;
-    }
+    } // end of Products arguments constructor
 
     public Products() {}
 

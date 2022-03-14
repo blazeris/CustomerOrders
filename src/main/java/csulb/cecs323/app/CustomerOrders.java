@@ -20,11 +20,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
-import javax.persistence.criteria.Order;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
@@ -81,46 +77,27 @@ public class CustomerOrders {
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
       // PROCEDURE PART 1
-      //customerOrders.promptCustomer();
+      customerOrders.promptCustomer();
 
       // PROCEDURE PART 2
-      //customerOrders.promptProduct();
+      customerOrders.promptProduct();
 
       // PROCEDURE PART 3
        customerOrders.promptOrders();
 
-       customerOrders.promptProduct();
-
-
    } // End of the main method
 
 
+    /**
+     * Prompts the user for to input an order. They are able to enter as a new or existing
+     * customer. Then they select a product that is available and how much of that they want.
+     * They'll be served a bill and then they can choose to accept it or not.
+     */
     public void promptOrders(){
         Scanner in = new Scanner(System.in);
-       List<Orders> targetOrders = null;
-       Customers targetCustomer = null;
-       boolean foundCustomer = false;
-       while(!foundCustomer){
-           System.out.println("Are you a new customer? Y/N");
-           String inpNewCustomer = in.nextLine().toUpperCase();
-           if(inpNewCustomer.equals("Y")){
-               targetCustomer = promptNewCustomer();
-               if(targetCustomer != null){
-                   foundCustomer = true;
-               }
-           }
-           else if(inpNewCustomer.equals("N")){
-               targetCustomer = promptCustomer();
-               if(targetCustomer != null){
-                   foundCustomer = true;
-               }
-           }
-           else {
-               System.out.println("Input a Y or N, try again.");
-           }
-       }
+        Customers targetCustomer = agnosticPromptCustomer();
 
-       LocalDateTime targetDateTime = promptDateTime();
+        LocalDateTime targetDateTime = promptDateTime();
 
         System.out.println("What is the name of the salesperson?");
         String seller = in.nextLine();
@@ -130,6 +107,46 @@ public class CustomerOrders {
         tx.begin();
         this.entityManager.persist(createdOrder);
 
+        promptOrderLines(createdOrder, tx);
+
+        List<Order_lines> orderLines = getOrderLines(createdOrder);
+        System.out.println("UPC\t\t\tName\t\tUnit Cost\t\tQuantity\t\tSubtotal");
+        double totalCost = 0;
+        if(orderLines != null){
+            for(Order_lines line: orderLines){
+                System.out.println(line);
+                totalCost += line.getQuantity() * line.getUnit_sale_price();
+            }
+        }
+        System.out.println("TOTAL\t\t\t\t\t\t\t\t\t\t$" + totalCost);
+        System.out.println("Are you satisfied with this? Y/N");
+        boolean foundSatisfaction = false;
+        while(!foundSatisfaction){
+            String satisfaction = in.nextLine();
+            switch(satisfaction.toUpperCase()){
+                case "Y":
+                    foundSatisfaction = true;
+                    tx.commit();
+                    break;
+                case "N":
+                    foundSatisfaction = true;
+                    tx.rollback();
+                    break;
+            }
+        }
+
+
+
+    } //end of promptOrders
+
+    /**
+     * For a given order, it'll allow the customer to input lines of
+     * products they want.
+     * @param createdOrder The order the orderlines will be created for
+     * @param tx The entity transaction instance to persist into
+     */
+    public void promptOrderLines(Orders createdOrder, EntityTransaction tx){
+        Scanner in = new Scanner(System.in);
         boolean orderDone = false;
         while(!orderDone){
             Products targetProduct = promptProduct();
@@ -179,35 +196,39 @@ public class CustomerOrders {
                 orderLineProduct.setUnits_in_stock(orderLineProduct.getUnits_in_stock() - createdOrderLine.getQuantity());
             }
         }
-        List<Order_lines> orderLines = getOrderLines(createdOrder);
-        System.out.println("UPC\t\t\tName\t\tUnit Cost\t\tQuantity\t\tSubtotal");
-        double totalCost = 0;
-        if(orderLines != null){
-            for(Order_lines line: orderLines){
-                System.out.println(line);
-                totalCost += line.getQuantity() * line.getUnit_sale_price();
+    }
+
+    /**
+     * Doesn't know whether or not the customer is new, so it asks which directs
+     * it to the proper prompt.
+     * @return
+     */
+    public Customers agnosticPromptCustomer(){
+        Scanner in = new Scanner(System.in);
+
+        Customers targetCustomer = null;
+        boolean foundCustomer = false;
+        while(!foundCustomer){
+            System.out.println("Are you a new customer? Y/N");
+            String inpNewCustomer = in.nextLine().toUpperCase();
+            if(inpNewCustomer.equals("Y")){
+                targetCustomer = promptNewCustomer();
+                if(targetCustomer != null){
+                    foundCustomer = true;
+                }
+            }
+            else if(inpNewCustomer.equals("N")){
+                targetCustomer = promptCustomer();
+                if(targetCustomer != null){
+                    foundCustomer = true;
+                }
+            }
+            else {
+                System.out.println("Input a Y or N, try again.");
             }
         }
-        System.out.println("TOTAL\t\t\t\t\t\t\t\t\t\t$" + totalCost);
-        System.out.println("Are you satisfied with this? Y/N");
-        boolean foundSatisfaction = false;
-        while(!foundSatisfaction){
-            String satisfaction = in.nextLine();
-            switch(satisfaction.toUpperCase()){
-                case "Y":
-                    foundSatisfaction = true;
-                    tx.commit();
-                    break;
-                case "N":
-                    foundSatisfaction = true;
-                    tx.rollback();
-                    break;
-            }
-        }
-
-
-
-    } //end of promptOrders
+        return targetCustomer;
+    }
 
     /**
      * Prompts the user to select a customer from a list of customers stored in the database
