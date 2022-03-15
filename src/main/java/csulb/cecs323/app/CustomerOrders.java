@@ -77,14 +77,15 @@ public class CustomerOrders {
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
       // PROCEDURE PART 1
-      customerOrders.promptCustomer();
+      //customerOrders.promptCustomer();
 
       // PROCEDURE PART 2
-      customerOrders.promptProduct();
+      //customerOrders.promptProduct();
 
       // PROCEDURE PART 3
        customerOrders.promptOrders();
 
+       System.out.println("Completed Satisfactorily");
    } // End of the main method
 
 
@@ -93,14 +94,13 @@ public class CustomerOrders {
      * customer. Then they select a product that is available and how much of that they want.
      * They'll be served a bill and then they can choose to accept it or not.
      */
-    public void promptOrders(){
-        Scanner in = new Scanner(System.in);
-        Customers targetCustomer = agnosticPromptCustomer();
+    private void promptOrders(){
+        Customers targetCustomer = completePromptCustomer();
 
         LocalDateTime targetDateTime = promptDateTime();
 
-        System.out.println("What is the name of the salesperson?");
-        String seller = in.nextLine();
+        String seller = promptSalesPerson();
+
         Orders createdOrder = new Orders(targetCustomer, targetDateTime, seller);
 
         EntityTransaction tx = entityManager.getTransaction();
@@ -109,35 +109,54 @@ public class CustomerOrders {
 
         promptOrderLines(createdOrder, tx);
 
-        List<Order_lines> orderLines = getOrderLines(createdOrder);
-        System.out.println("UPC\t\t\tName\t\tUnit Cost\t\tQuantity\t\tSubtotal");
+        printOrder(createdOrder);
+
+        confirmOrder(tx);
+
+    } //end of promptOrders
+
+    /**
+     * Prints an order, line by line through order_lines
+     * @param order Order to be printed
+     */
+    private void printOrder(Orders order){
+        List<Order_lines> orderLines = getOrderLines(order);
+        System.out.println("\nUPC\t\t\t\tName\t\tUnit Cost\tQuantity\tSubtotal");
         double totalCost = 0;
         if(orderLines != null){
             for(Order_lines line: orderLines){
                 System.out.println(line);
                 totalCost += line.getQuantity() * line.getUnit_sale_price();
-            }
+            } // end of for loop
         }
         System.out.println("TOTAL\t\t\t\t\t\t\t\t\t\t$" + totalCost);
-        System.out.println("Are you satisfied with this? Y/N");
+    } // end of printOrder method
+
+    /**
+     * Prompts the user to either confirm or cancel their order, which will be done as they request.
+     * @param tx EntityTransaction to commit or rollback to
+     */
+    private void confirmOrder(EntityTransaction tx){
+        Scanner in = new Scanner(System.in);
+
+        System.out.println("\nAre you satisfied with this? Y/N");
         boolean foundSatisfaction = false;
         while(!foundSatisfaction){
             String satisfaction = in.nextLine();
             switch(satisfaction.toUpperCase()){
                 case "Y":
+                    System.out.println("Order has been made, and you have been billed. Have a good day.");
                     foundSatisfaction = true;
                     tx.commit();
                     break;
                 case "N":
+                    System.out.println("Order cancelled.");
                     foundSatisfaction = true;
                     tx.rollback();
                     break;
-            }
-        }
-
-
-
-    } //end of promptOrders
+            } // end of switch statement
+        } // end of while loop
+    } // end of confirmOrder method
 
     /**
      * For a given order, it'll allow the customer to input lines of
@@ -145,7 +164,7 @@ public class CustomerOrders {
      * @param createdOrder The order the orderlines will be created for
      * @param tx The entity transaction instance to persist into
      */
-    public void promptOrderLines(Orders createdOrder, EntityTransaction tx){
+    private void promptOrderLines(Orders createdOrder, EntityTransaction tx){
         Scanner in = new Scanner(System.in);
         boolean orderDone = false;
         while(!orderDone){
@@ -156,54 +175,61 @@ public class CustomerOrders {
             else {
                 int quantityInStock = targetProduct.getUnits_in_stock();
 
-                System.out.println("Please enter the quantity desired: ");
+                System.out.println("\nPlease enter the quantity desired: ");
                 int quantityDesired = in.nextInt();
                 in.nextLine();
-                if(quantityDesired > quantityInStock) {
-                    boolean optionSelected = false;
-                    while(!optionSelected){
-                        System.out.println("Quantity entered is greater than amount left in stock. Your options are:");
-                        System.out.println("1. Buy whatever remaining stock is left. \n2. Remove this product from the order." +
-                                "\n3. Cancel this order.");
-                        System.out.println("Please choose an option: ");
-                        String choice = in.nextLine();
-                        switch (choice) {
-                            case "1":
-                                //buy whatever is left;
-                                quantityDesired = quantityInStock;
-                                optionSelected = true;
-                                break;
-                            case "2":
-                                //remove this product from order;
-                                optionSelected = true;
-                                break;
-                            case "3":
-                                //cancel this order;
-                                tx.rollback();
-                                orderDone = true;
-                                optionSelected = true;
-                                break;
-                            default:
-                                System.out.println("Error. Please enter 1, 2, or 3.");
-                        }
+                if(quantityDesired > 0){
+                    if(quantityDesired > quantityInStock) {
+                        boolean optionSelected = false;
+                        while(!optionSelected){
+                            System.out.println("\nQuantity entered is greater than amount left in stock. Your options are:");
+                            System.out.println("\t1. Buy whatever remaining stock is left. " +
+                                    "\n\t2. Remove this product from the order." +
+                                    "\n\t3. Cancel this order.");
+                            System.out.println("Please choose an option: ");
+                            String choice = in.nextLine();
+                            switch (choice) {
+                                case "1":
+                                    //buy whatever is left;
+                                    quantityDesired = quantityInStock;
+                                    optionSelected = true;
+                                    break;
+                                case "2":
+                                    //remove this product from order;
+                                    optionSelected = true;
+                                    break;
+                                case "3":
+                                    //cancel this order;
+                                    tx.rollback();
+                                    orderDone = true;
+                                    optionSelected = true;
+                                    System.out.println("Order cancelled.");
+                                    break;
+                                default:
+                                    System.out.println("Error. Please enter 1, 2, or 3.");
+                            } // end of switch statement
+                        } // end of while loop
+                    } // end of if(quantityDesired > quantityInStock)
+                    if(!orderDone){
+                        Order_lines createdOrderLine = new Order_lines(createdOrder, targetProduct, quantityDesired, targetProduct.getUnit_list_price());
+                        this.entityManager.persist(createdOrderLine);
+                        Products orderLineProduct = getProduct(createdOrderLine.getProduct().getUPC());
+                        orderLineProduct.setUnits_in_stock(orderLineProduct.getUnits_in_stock() - createdOrderLine.getQuantity());
                     }
-                    System.out.println(quantityDesired);
+                } // end of if(quantityDesired > 0)
+                else {
+                    System.out.println("Invalid quantity, has to be greater than 0");
                 }
-                Order_lines createdOrderLine = new Order_lines(createdOrder, targetProduct, quantityDesired, targetProduct.getUnit_list_price());
-                this.entityManager.persist(createdOrderLine);
-                String upc = createdOrderLine.getProduct().getUPC();
-                Products orderLineProduct = getProduct(upc);
-                orderLineProduct.setUnits_in_stock(orderLineProduct.getUnits_in_stock() - createdOrderLine.getQuantity());
             }
-        }
-    }
+        } // end of while loop
+    } // end of promptOrderLines method
 
     /**
      * Doesn't know whether or not the customer is new, so it asks which directs
      * it to the proper prompt.
      * @return
      */
-    public Customers agnosticPromptCustomer(){
+    private Customers completePromptCustomer(){
         Scanner in = new Scanner(System.in);
 
         Customers targetCustomer = null;
@@ -226,36 +252,34 @@ public class CustomerOrders {
             else {
                 System.out.println("Input a Y or N, try again.");
             }
-        }
+        } // end of while loop
         return targetCustomer;
-    }
+    } // end of completePromptCustomer method
 
     /**
      * Prompts the user to select a customer from a list of customers stored in the database
      * @return The user's desired customer
      */
-    public Customers promptCustomer(){
+    private Customers promptCustomer(){
         Scanner in = new Scanner(System.in);
         boolean foundID = false;
         Customers targetCustomer = null;
         while(!foundID){
-            System.out.println("Which customer are you? Select your customer ID from the following customers:");
+            System.out.println("\nWhich customer are you? Select your customer ID from the following customers:");
             List<Customers> customers = getCustomers();
             if(customers != null){
                 for(Customers customer: getCustomers()){
                     System.out.println("\t" + customer);
-                }
-                System.out.print("Type your customer id here (leave blank to skip): ");
+                } // end of for loop
+                System.out.println("Type your customer id here (leave blank to skip): ");
                 String id = in.nextLine();
                 if(id.equals("")){
                     foundID = true;
                 }
                 else{
-                    for(Customers customer: getCustomers()){
-                        if(customer.getCustomer_id() == Long.parseLong(id)){
-                            targetCustomer = customer;
-                            foundID = true;
-                        }
+                    targetCustomer = getCustomer(id);
+                    if(targetCustomer != null){
+                        foundID = true;
                     }
                 }
                 if(!foundID){
@@ -266,19 +290,19 @@ public class CustomerOrders {
                 System.out.println("No previously existing customers, please indicate as new customer");
                 foundID = true;
             }
-        }
+        } // end of while loop
         if(targetCustomer != null){
-            System.out.println("You have selected: " + targetCustomer);
+            System.out.println("You have selected: \n\t" + targetCustomer);
         }
         return targetCustomer;
-    } // end of promptCustomer
+    } // end of promptCustomer method
 
     /**
      * Prompts the user to enter the information for a new customer, which will also add the
      * information to persist in the database
      * @return The created custoemr object
      */
-    public Customers promptNewCustomer(){
+    private Customers promptNewCustomer(){
         Customers targetCustomer = null;
 
         Scanner input = new Scanner(System.in);
@@ -300,21 +324,21 @@ public class CustomerOrders {
             tx.begin();
             this.entityManager.persist(targetCustomer);
             tx.commit();
-        }
+        } // end of try
         catch(DatabaseException e){
             System.out.println(e);
             System.out.println("You're not a new customer!");
             targetCustomer = null;
-        }
+        } // end of catch
         System.out.println("You are: " + targetCustomer);
         return targetCustomer;
-    } //end of promptNewCustomer
+    } //end of promptNewCustomer method
 
     /**
      * Prompts the user to input either a past date time when the order was placed, or to select the current date time
      * @return User's desired and valid date time
      */
-    public LocalDateTime promptDateTime(){
+    private LocalDateTime promptDateTime(){
         Scanner in = new Scanner(System.in);
         boolean foundDateTime = false;
         LocalDateTime targetDateTime = null;
@@ -339,24 +363,34 @@ public class CustomerOrders {
                     if(targetDateTime.isBefore(currentTime)){
                         foundDateTime = true;
                     }
-                }
+                } // end of try
                 catch (Exception e) {
                     System.out.println("Invalid format.");
-                }
+                } // end of catch
             }
             if(!foundDateTime){
                 System.out.println("Invalid date time! Ensure your selected date and time is before the present. Try again.");
             }
         }
-        System.out.println("You have selected: " + targetDateTime);
+        System.out.println("You have selected: \n\t" + targetDateTime.toLocalDate() + "\t" + targetDateTime.toLocalTime());
         return targetDateTime;
-    } // end of promptDateTime
+    } // end of promptDateTime method
+
+    /**
+     * Prompts the user to input the name of the sales person. This is a simple string.
+     * @return Name of the sales person
+     */
+    private String promptSalesPerson(){
+        Scanner in = new Scanner(System.in);
+        System.out.println("\nWhat is the name of the salesperson?");
+        return in.nextLine();
+    } // end of promptSalesPerson
 
     /**
      * Prompts the user to select a product from a list of products stored in the database
      * @return The user's desired product
      */
-    public Products promptProduct(){
+    private Products promptProduct(){
         Scanner in = new Scanner(System.in);
         boolean foundUPC = false;
         Products targetProduct = null;
@@ -365,17 +399,15 @@ public class CustomerOrders {
             for(Products product: getProducts()){
                 System.out.println("\t" + product);
             }
-            System.out.print("Type your product UPC here: ");
+            System.out.println("Type your product UPC here (leave blank to end order): ");
             String upc = in.nextLine();
             if(upc.equals("")){
                 foundUPC = true;
             }
             else {
-                for(Products product: getProducts()){
-                    if(product.getUPC().equals(upc)){
-                        targetProduct = product;
-                        foundUPC = true;
-                    }
+                targetProduct = getProduct(upc);
+                if(targetProduct != null){
+                    foundUPC = true;
                 }
             }
             if(!foundUPC){
@@ -383,10 +415,10 @@ public class CustomerOrders {
             }
         }
         if(targetProduct != null){
-            System.out.println("You have selected: " + targetProduct);
+            System.out.println("You have selected: \n\t" + targetProduct);
         }
         return targetProduct;
-    } // end of promptProduct
+    } // end of promptProduct method
 
    /**
     * Create and persist a list of objects to the database.
@@ -430,6 +462,10 @@ public class CustomerOrders {
       }
    }// End of the getProduct method
 
+    /**
+     * Acquires a list of all products acquired from the database
+     * @return The list of all Products
+     */
    public List<Products> getProducts () {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Products> products = this.entityManager.createNamedQuery("ReturnProducts",
@@ -443,6 +479,11 @@ public class CustomerOrders {
       }
    } // End of the getProduct method
 
+    /**
+     * Acquires a specific orderLine corresponding to an order
+     * @param targetOrder The order that the orderLine belongs to
+     * @return The list of all orderLines that correspond to an order
+     */
     public List<Order_lines> getOrderLines (Orders targetOrder) {
         // Run the native query that we defined in the Products entity to find the right style.
         List<Order_lines> orderLines = this.entityManager
@@ -460,10 +501,7 @@ public class CustomerOrders {
     } // End of the getProduct method
 
    /**
-    * Think of this as a simple map from a String to an instance of Customers that has the
-    * same name, as the string that you pass in.  To create a new Cars instance, you need to pass
-    * in an instance of Products to satisfy the foreign key constraint, not just a string
-    * representing the name of the style.
+    * Acquires a Customer object corresponding to a customer_id from the database
     * @param customer_ID        The name of the product that you are looking for.
     * @return           The Customers instance corresponding to that customer_ID.
     */
@@ -480,6 +518,10 @@ public class CustomerOrders {
       }
    }// End of the getCustomer method
 
+    /**
+     * Acquires all customer objects stored in the database
+     * @return List of all Customer objects
+     */
    public List<Customers> getCustomers() {
       // Run the native query that we defined in the Products entity to find the right style.
       List<Customers> customers = this.entityManager.createNamedQuery("ReturnCustomer",

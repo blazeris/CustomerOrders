@@ -134,7 +134,7 @@ public class Order_lines {
     @Override
     public String toString(){
         return product.getUPC() + "\t\t"
-                + product.getProd_name() + "\t\t\t$"
+                + product.getProd_name() + "\t\t$"
                 + unit_sale_price + "\t\tx"
                 + quantity + "\t\t= $"
                 + (unit_sale_price * quantity);
