@@ -16,9 +16,16 @@ import java.util.Objects;
 
 @Entity
 @NamedNativeQuery(
-        name="ReturnCustomer",
+        name="ReturnCustomers",
         query = "SELECT * " +
                 "FROM   CUSTOMERS",
+        resultClass = Customers.class
+)
+@NamedNativeQuery(
+        name="ReturnCustomer",
+        query = "SELECT * " +
+                "FROM   CUSTOMERS " +
+                "WHERE CUSTOMER_ID = ? ",
         resultClass = Customers.class
 )
 // I could have avoided uniqueConstraints and just done
