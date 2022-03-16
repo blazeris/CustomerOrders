@@ -43,6 +43,12 @@ public class Orders {
     private String sold_by;
 
     public Orders () {}
+    /**
+     * The creation of an order that has all the informations of the purchase.
+     * @param customer the customer that places the order
+     * @param order_date the date the order was placed
+     * @param sold_by the seller of the product
+     */
 
     public Orders (Customers customer, LocalDateTime order_date,
                    String sold_by) {
@@ -50,14 +56,23 @@ public class Orders {
         this.order_date = order_date;
         this.sold_by = sold_by;
     }
+    /**
+     * @return customer
+     */
 
     public Customers getCustomer() {
         return customer;
     }
+    /**
+     * @return order_date
+     */
 
     public void setCustomer(Customers customer) {
         this.customer = customer;
     }
+    /**
+     * @return sold_by
+     */
 
     public LocalDateTime getOrder_date() {
         return order_date;
