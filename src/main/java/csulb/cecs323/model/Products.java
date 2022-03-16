@@ -140,6 +140,9 @@ public class Products {
     }
 
     @Override
+    /**
+     * A string composed of the product UPC, name, price and quantity on hand
+     */
     public String toString () {
         return "Product-UPC: " + this.UPC + "\tName: " + this.prod_name + "\tPrice: " + this.unit_list_price
                 + "\tQTY on hand: " + this.units_in_stock;
