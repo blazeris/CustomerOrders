@@ -97,7 +97,6 @@ public class Orders {
 
     /**
      * A String composing the oreder placed by a specific customer, the order date and
-     *
      **/
     public String toString () {
         return "Order: Placed by: " + this.getCustomer() + ", On: " + this.getOrder_date() +
