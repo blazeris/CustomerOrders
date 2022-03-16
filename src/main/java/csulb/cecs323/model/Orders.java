@@ -71,7 +71,7 @@ public class Orders {
         this.customer = customer;
     }
     /**
-     * @return sold_by
+     * @return order_date
      */
 
     public LocalDateTime getOrder_date() {
@@ -81,7 +81,10 @@ public class Orders {
     public void setOrder_date(LocalDateTime order_date) {
         this.order_date = order_date;
     }
-
+    /**
+     * @return sold_by
+     *
+     **/
     public String getSold_by() {
         return sold_by;
     }
@@ -91,6 +94,11 @@ public class Orders {
     }
 
     @Override
+
+    /**
+     * A String composing the oreder placed by a specific customer, the order date and
+     *
+     **/
     public String toString () {
         return "Order: Placed by: " + this.getCustomer() + ", On: " + this.getOrder_date() +
                 ", Sold by: " + this.getSold_by();
