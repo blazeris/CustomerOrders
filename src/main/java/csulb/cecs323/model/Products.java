@@ -59,13 +59,14 @@ public class Products {
 
     /**
      *
-     * @param UPC
-     * @param prod_name
-     * @param mfgr
-     * @param model
-     * @param unit_list_price
-     * @param units_in_stock
+     * @param UPC an id identifying a specific product.
+     * @param prod_name the product's name
+     * @param mfgr manufacturer of the product
+     * @param model the model of the product
+     * @param unit_list_price the price the unit is listed at
+     * @param units_in_stock the amount of the unit in stock
      */
+
     public Products(String UPC, String prod_name, String mfgr, String model, double unit_list_price, int units_in_stock) {
         this.UPC = UPC;
         this.prod_name = prod_name;
@@ -76,6 +77,9 @@ public class Products {
     } // end of Products arguments constructor
 
     public Products() {}
+    /**
+     * @return UPC
+     */
 
     public String getUPC() {
         return UPC;
@@ -84,7 +88,9 @@ public class Products {
     public void setUPC(String UPC) {
         this.UPC = UPC;
     }
-
+    /**
+     * @return prod_name
+     */
     public String getProd_name() {
         return prod_name;
     }
@@ -92,7 +98,9 @@ public class Products {
     public void setProd_name(String prod_name) {
         this.prod_name = prod_name;
     }
-
+    /**
+     * @return mfgr
+     */
     public String getMfgr() {
         return mfgr;
     }
@@ -100,7 +108,9 @@ public class Products {
     public void setMfgr(String mfgr) {
         this.mfgr = mfgr;
     }
-
+    /**
+     * @return model
+     */
     public String getModel() {
         return model;
     }
@@ -108,7 +118,9 @@ public class Products {
     public void setModel(String model) {
         this.model = model;
     }
-
+    /**
+     * @return unit_list_price
+     */
     public double getUnit_list_price() {
         return unit_list_price;
     }
@@ -116,7 +128,9 @@ public class Products {
     public void setUnit_list_price(double unit_list_price) {
         this.unit_list_price = unit_list_price;
     }
-
+    /**
+     * @return units_in_stock
+     */
     public int getUnits_in_stock() {
         return units_in_stock;
     }

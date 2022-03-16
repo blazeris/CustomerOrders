@@ -33,12 +33,19 @@ public class Orders_pk implements Serializable {
     private LocalDateTime order_date;
 
     public Orders_pk () {}
+    /**
+     * A function to create an order.
+     * @param customer_id the customer's id
+     * @param order_date the date the order was placed
+     */
 
     public Orders_pk (long customer_id, LocalDateTime order_date) {
         this.customer = customer_id;
         this.order_date = order_date;
     }
-
+    /**
+     * @return customer
+     */
     public long getCustomer() {
         return customer;
     }
@@ -46,7 +53,9 @@ public class Orders_pk implements Serializable {
     public void setCustomer(long customer) {
         this.customer = customer;
     }
-
+    /**
+     * @return order_date
+     */
     public LocalDateTime getOrder_date() {
         return order_date;
     }
@@ -56,6 +65,11 @@ public class Orders_pk implements Serializable {
     }
 
     @Override
+    /**
+     * A function to create an order.
+     * @param Object a
+     * @return results
+     */
     public boolean equals (Object o) {
         boolean results = false;
         if (this == o) {
