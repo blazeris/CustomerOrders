@@ -21,7 +21,6 @@ additional columns of quantity and unit_sale_price to contend
 with.  In that case, we could have let JPA generate the junction
 table for us and left it at that.  As it is, however, we have
 to build it ourselves.
-
 One question that I have is if we had a model in which the
 association class was the parent to some other class, would
 that mean that you would have to explicitly declare the
@@ -49,26 +48,24 @@ public class Order_lines {
     private Products product;
     @Column(nullable=false)
     /** The number of this item in this order.  If the customer
-    changes their mind and wants more of this item, we come
-    back to this row and update the quantity.
+     changes their mind and wants more of this item, we come
+     back to this row and update the quantity.
      */
     private int quantity;
     @Column(nullable = false)
     /** The price of this item FOR THIS ORDER.  The customer might
-    have scored a discount from the unit_list_price for this
-    product that is only in effect for this sale.
+     have scored a discount from the unit_list_price for this
+     product that is only in effect for this sale.
      */
     private double unit_sale_price;
 
     /**
-     *
+     *Default constructor for Order lines
      */
-    public Order_lines(){
-
-    } // end of Order_lines()
+    public Order_lines(){} // end of Order_lines()
 
     /**
-     * The number and cost of a particular product from an order
+     * Constructor to set the number and cost of a particular product from an order
      * @param order the order that calls for these products
      * @param product the product being ordered
      * @param quantity number of products
@@ -81,38 +78,75 @@ public class Order_lines {
         this.setUnit_sale_price(unit_sale_price);
     } // end of Order_lines()
 
+    /**
+     * Function to get a particular order
+     * @return the order requested
+     */
     public Orders getOrder() {
         return order;
     }
 
+    /**
+     * Function to set an order instance to an order passed in
+     * @param order Placed by a customer, lists the product being ordered, the quantity, and the price.
+     */
     public void setOrder(Orders order) {
         this.order = order;
     }
 
+    /**
+     * Function to get a particular product.
+     * @return the product requested
+     */
     public Products getProduct() {
         return product;
     }
 
+    /**
+     * Function to set a product instance to a product passed in
+     * @param product the product being ordered
+     */
     public void setProduct(Products product) {
         this.product = product;
     }
 
+    /**
+     * Function to get the quantity of a product being ordered
+     * @return the quantity of product being ordered
+     */
     public int getQuantity() {
         return quantity;
     }
 
+    /**
+     * Function to set the quantity of a specific product being ordered
+     * @param quantity number of products
+     */
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * Function to get the unit sale price of a given product
+     * @return The requested unit sale price of a product
+     */
     public double getUnit_sale_price() {
         return unit_sale_price;
     }
 
+    /**
+     * Function to set the unit sale price to one passed in
+     * @param unit_sale_price cost per unit of product
+     */
     public void setUnit_sale_price(double unit_sale_price) {
         this.unit_sale_price = unit_sale_price;
     }
 
+    /**
+     * Function to check if a particular order ID equals another
+     * @param o Object which is passed in to check if it equals
+     * @return The order which equals the object passed
+     */
     public boolean equals (Object o) {
         boolean results = false;
         if (this == o) {
@@ -127,10 +161,18 @@ public class Order_lines {
         return results;
     }
 
+    /**
+     *Hash function to map order and product
+     * @return hash map
+     */
     public int hasCode () {
         return Objects.hash(this.getOrder(), this.getProduct());
     }
 
+    /**
+     * toString function for order lines
+     * @return
+     */
     @Override
     public String toString(){
         return product.getUPC() + "\t\t"

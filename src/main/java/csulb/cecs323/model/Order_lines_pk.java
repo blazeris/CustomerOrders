@@ -38,33 +38,60 @@ public class Order_lines_pk implements Serializable {
     /** One product within this one order */
     private String product;
 
-    public Order_lines_pk(){
+    /**
+     * Default constructor for order_lines_pk
+     */
+    public Order_lines_pk() {}
 
-    }
-
-    public Order_lines_pk(Orders_pk order, String product){
+    /**
+     * Parameterized constructor for order_lines_pk
+     * @param order The order containing the given product
+     * @param product One product within this one order
+     */
+    public Order_lines_pk(Orders_pk order, String product) {
         this.order = order;
         this.product = product;
     }
 
+    /**
+     * Function to get a specific order
+     * @return the requested order
+     */
     public Orders_pk getOrder() {
         return order;
     }
 
+    /**
+     * Function to set a given order instance to the order passed in
+     * @param order The order containing the given product
+     */
     public void setOrder(Orders_pk order) {
         this.order = order;
     }
 
+    /**
+     * Function to get a given product
+     * @return The requested order
+     */
     public String getProduct() {
         return product;
     }
 
+    /**
+     * Function to set a product instance to the product passed in
+     * @param product
+     */
     public void setProduct(String product) {
         this.product = product;
     }
 
+    /**
+     * Function to check if equal
+     * @param o Object which is passed through to see if it's equal
+     * @return The results
+     */
     @Override
-    public boolean equals (Object o) {
+    public boolean equals(Object o) {
         boolean results = false;
         if (this == o) {
             results = true;
@@ -72,13 +99,18 @@ public class Order_lines_pk implements Serializable {
             results = false;
         } else {
             Order_lines_pk olpk = (Order_lines_pk) o;
-            results = this.getOrder().equals (olpk.getOrder()) &&
+            results = this.getOrder().equals(olpk.getOrder()) &&
                     this.getProduct() == olpk.getProduct();
         }
         return results;
     }
+
+    /**
+     * Hash function to map order and product
+     * @return hash map
+     */
     @Override
-    public int hashCode () {
-        return Objects.hash (this.getOrder(), this.getProduct());
+    public int hashCode() {
+        return Objects.hash(this.getOrder(), this.getProduct());
     }
 }

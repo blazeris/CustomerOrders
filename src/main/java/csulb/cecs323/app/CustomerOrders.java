@@ -77,10 +77,10 @@ public class CustomerOrders {
       CustomerOrders customerOrders = new CustomerOrders(manager);
 
       // PROCEDURE PART 1
-      //customerOrders.promptCustomer();
+      customerOrders.promptCustomer();
 
       // PROCEDURE PART 2
-      //customerOrders.promptProduct();
+      customerOrders.promptProduct();
 
       // PROCEDURE PART 3
        customerOrders.promptOrder();
@@ -174,11 +174,11 @@ public class CustomerOrders {
             } // end of if statement
             else {
                 int quantityInStock = targetProduct.getUnits_in_stock(); // Quantity of product available
-
                 System.out.println("\nPlease enter the quantity desired: ");
                 int quantityDesired = in.nextInt(); // Quantity that customer wants
                 in.nextLine();
                 if(quantityDesired > 0){
+                    boolean cancelProduct = false;
                     if(quantityDesired > quantityInStock) {
                         boolean optionSelected = false;
                         while(!optionSelected){
@@ -189,17 +189,15 @@ public class CustomerOrders {
                             System.out.println("Please choose an option: ");
                             String choice = in.nextLine(); // User's input
                             switch (choice) {
-                                case "1":
-                                    //buy whatever is left;
+                                case "1": //buy whatever is left;
                                     quantityDesired = quantityInStock;
                                     optionSelected = true;
                                     break;
-                                case "2":
-                                    //remove this product from order;
+                                case "2": //remove this product from order;
+                                    cancelProduct = true;
                                     optionSelected = true;
                                     break;
-                                case "3":
-                                    //cancel this order;
+                                case "3": //cancel this order;
                                     tx.rollback();
                                     orderDone = true;
                                     optionSelected = true;
@@ -210,7 +208,7 @@ public class CustomerOrders {
                             } // end of switch statement
                         } // end of while loop
                     } // end of if(quantityDesired > quantityInStock)
-                    if(!orderDone){
+                    if(!orderDone && !cancelProduct){
                         Order_lines createdOrderLine = new Order_lines(createdOrder, targetProduct, quantityDesired, targetProduct.getUnit_list_price());
                         this.entityManager.persist(createdOrderLine);
                         targetProduct.setUnits_in_stock(targetProduct.getUnits_in_stock() - createdOrderLine.getQuantity());
@@ -341,8 +339,7 @@ public class CustomerOrders {
         boolean foundDateTime = false;
         LocalDateTime targetDateTime = null;
         while(!foundDateTime){
-            System.out.println("\nWhat date was the order placed (year-month-date)? Leave blank if you want to place it right now:");
-            System.out.println("Ensure single digits have a 0 in front i.e 2022-04-07");
+            System.out.println("\nWhat date was the order placed (year-month-date)? Leave blank if you want to place it right now:\nEnsure single digits have a 0 in front i.e 2022-04-07");
             String inputDate = in.nextLine();
             LocalDateTime currentTime = LocalDateTime.now();
             if(inputDate.equals("")){
@@ -350,10 +347,8 @@ public class CustomerOrders {
                 targetDateTime = currentTime;
             } // end of if statement
             else {
-                System.out.println("\nWhat time was the order placed (hour:minutes)?:");
-                System.out.println("Ensure single digits have a 0 in front i.e 07:03");
+                System.out.println("\nWhat time was the order placed (hour:minutes)?:\nEnsure single digits have a 0 in front i.e 07:03");
                 String inputTime = in.nextLine();
-
                 // We'll ignore seconds
                 String inputDateTime = inputDate + "T" + inputTime + ":00";
                 try{
